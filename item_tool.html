@@ -288,6 +288,18 @@
                         <div id="tierPreview" class="text-[11px] font-mono mt-1.5 text-zinc-500 font-semibold uppercase">Tier: <span class="text-zinc-600">-</span></div>
                     </div>
 
+                    <!-- Kappa Checkbox -->
+                    <div class="flex items-center gap-3 px-3 py-2.5 rounded border border-zinc-800 bg-[#09090b] cursor-pointer hover:border-amber-500/40 transition-all" onclick="document.getElementById('editKappa').click()">
+                        <input type="checkbox" id="editKappa" class="w-4 h-4 accent-amber-500 cursor-pointer" onclick="event.stopPropagation()">
+                        <div class="flex flex-col">
+                            <span class="font-tactical text-sm font-bold text-amber-400 tracking-wider">KAPPA CONTAINER ITEM</span>
+                            <span class="font-mono text-[10px] text-zinc-500 uppercase tracking-wide">Dieses Item wird für den Kappa Container benötigt</span>
+                        </div>
+                        <div class="ml-auto">
+                            <svg class="w-5 h-5 text-amber-500/60" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                        </div>
+                    </div>
+
                     <div class="pt-2">
                         <button onclick="addItemToJson()" class="tarkov-btn tarkov-btn-primary w-full py-2.5 text-sm md:text-base font-bold tracking-wide" id="submitBtn">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" id="submitIcon"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -368,6 +380,11 @@
                             <option value="price_asc">Price: Low to High</option>
                         </select>
 
+                        <button id="kappaFilterBtn" onclick="toggleKappaFilter()" class="tarkov-btn text-xs font-mono font-bold uppercase px-4 py-2 flex-shrink-0 border border-zinc-800 bg-[#09090b] text-zinc-500 hover:border-amber-500/50 hover:text-amber-400 transition-all whitespace-nowrap tracking-wide flex items-center gap-2">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                            KAPPA
+                        </button>
+
                         <span id="itemCount" class="bg-zinc-900 text-emerald-500 border border-emerald-500/30 text-xs font-mono font-bold uppercase px-4 py-2 rounded flex-shrink-0 shadow-[0_0_10px_rgba(16,185,129,0.1)] flex items-center justify-center whitespace-nowrap tracking-wide">
                             0 Matches
                         </span>
@@ -393,10 +410,24 @@
 
     <script>
         // --- Konfiguration ---
-        const availableMaps = ["Customs", "Factory", "Ground Zero", "Interchange", "Lighthouse", "Reserve", "Shoreline", "Streets", "Lab", "Woods", "The Labyrinth"];
+        const availableMaps = ["Customs", "Factory", "Ground Zero", "Interchange", "Icebreaker", "Lighthouse", "Reserve", "Shoreline", "Streets", "Lab", "Woods", "The Labyrinth"];
         let selectedMaps = new Set();
         let renderTimeout;
         let currentSelectedIcon = "";
+        let kappaFilterActive = false;
+
+        function toggleKappaFilter() {
+            kappaFilterActive = !kappaFilterActive;
+            const btn = document.getElementById('kappaFilterBtn');
+            if (kappaFilterActive) {
+                btn.classList.remove('border-zinc-800', 'text-zinc-500');
+                btn.classList.add('border-amber-500/60', 'text-amber-400', 'bg-amber-500/10', 'shadow-[0_0_10px_rgba(245,158,11,0.15)]');
+            } else {
+                btn.classList.add('border-zinc-800', 'text-zinc-500');
+                btn.classList.remove('border-amber-500/60', 'text-amber-400', 'bg-amber-500/10', 'shadow-[0_0_10px_rgba(245,158,11,0.15)]');
+            }
+            renderVisualList();
+        }
 
         // Init Map Buttons & Select Filter
         const mapContainer = document.getElementById('mapButtons');
@@ -653,6 +684,7 @@
             document.getElementById('editText').value = item.text || "";
             document.getElementById('editValue').value = item.value || "";
             document.getElementById('editIcon').value = item.icon || "";
+            document.getElementById('editKappa').checked = item.isKappa === true;
 
             selectAllMaps(false);
             let maps = Array.isArray(item.map) ? item.map : [item.map];
@@ -714,6 +746,7 @@
 
             const mapArray = Array.from(selectedMaps);
             const mapData = mapArray.length === 1 ? mapArray[0] : mapArray;
+            const isKappa = document.getElementById('editKappa').checked;
 
             try {
                 let currentJsonStr = document.getElementById('jsonOutput').value;
@@ -725,7 +758,8 @@
                     "map": mapData,
                     "text": text,
                     "value": value,
-                    "icon": iconUrl
+                    "icon": iconUrl,
+                    ...(isKappa && { "isKappa": true })
                 };
 
                 const newJsonStr = JSON.stringify(currentJson, null, 2);
@@ -736,6 +770,7 @@
                 document.getElementById('editText').value = '';
                 document.getElementById('editValue').value = '';
                 document.getElementById('editIcon').value = '';
+                document.getElementById('editKappa').checked = false;
                 document.getElementById('tierPreview').innerHTML = `Tier: <span class="text-zinc-600">-</span>`;
                 selectAllMaps(false);
                 checkIfEdit();
@@ -835,6 +870,7 @@
                         let itemMaps = Array.isArray(item.map) ? item.map : [item.map];
                         if(!itemMaps.includes(mapFilter)) return false;
                     }
+                    if(kappaFilterActive && !item.isKappa) return false;
                     return true;
                 });
 
@@ -871,6 +907,13 @@
                     } else if (item.map) {
                         mapsHtml = `<span class="${badgeBase}">${item.map}</span>`;
                     }
+
+                    const kappaBadge = item.isKappa
+                        ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-mono font-bold tracking-wide bg-amber-500/10 border border-amber-500/40 text-amber-400" style="text-shadow: 0 0 6px rgba(245,158,11,0.4)">
+                               <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                               KAPPA
+                           </span>`
+                        : '';
                     
                     const imgUrl = item.icon || "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjM2YzZjQ2IiBzdHJva2Utd2lkdGg9IjIiPjxwYXRoIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIgZD0iTTEyIDh2NG0wIDR2LjAxTTIxIDEyYTIgMiAwIDExLTE4IDBhMiAyIDAgMDExOCAwem0wIDBhOSA5IDAgMTEtMTggMGE5IDkgMCAwMTE4IDB6Ii8+PC9zdmc+";
 
@@ -900,6 +943,7 @@
                         <div class="flex justify-between items-end mt-auto pt-3 border-t border-zinc-800/80 pl-1">
                             <div class="flex flex-wrap gap-1.5 max-w-[60%]">
                                 ${mapsHtml}
+                                ${kappaBadge}
                             </div>
                             <span class="${tier.textClass} font-mono text-xs xl:text-sm font-bold tracking-wider">${item.value || '?'}</span>
                         </div>
