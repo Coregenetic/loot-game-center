@@ -75,8 +75,7 @@ function createMainWindow() {
 // ─── Version helpers ─────────────────────────────────────────────────────────
 function getLocalVersion() {
   try {
-    const data = JSON.parse(fs.readFileSync(VERSION_FILE, 'utf8'));
-    return data.version || '0.0.0';
+    return app.getVersion();
   } catch {
     return '0.0.0';
   }
