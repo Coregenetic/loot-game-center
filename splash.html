@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loot-Game // Loading</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background: #050505;
+            color: #e4e4e7;
+            font-family: 'JetBrains Mono', monospace;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            user-select: none;
+            -webkit-app-region: drag;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 50% 40%, rgba(5, 150, 105, 0.12) 0%, transparent 55%),
+                linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+            background-size: 100% 100%, 28px 28px, 28px 28px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            width: 440px;
+        }
+
+        .logo-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 64px;
+            height: 64px;
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            border-radius: 8px;
+            background: rgba(16, 185, 129, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.15), inset 0 0 20px rgba(16, 185, 129, 0.05);
+        }
+
+        .logo-icon svg { width: 36px; height: 36px; color: #10b981; filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.6)); }
+
+        .logo-icon::after {
+            content: '';
+            position: absolute;
+            inset: -6px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 12px;
+            animation: pulse-ring 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-ring {
+            0%, 100% { opacity: 0.2; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.03); }
+        }
+
+        .logo-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 2rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #10b981;
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .logo-sub {
+            font-size: 0.65rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: #52525b;
+        }
+
+        .status-panel {
+            width: 100%;
+            background: rgba(9, 9, 11, 0.85);
+            border: 1px solid #27272a;
+            border-radius: 6px;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+        }
+
+        .status-label { color: #52525b; text-transform: uppercase; }
+        .status-value { color: #a1a1aa; }
+        .status-value.green { color: #10b981; text-shadow: 0 0 8px rgba(16,185,129,0.4); }
+        .status-value.amber { color: #f59e0b; }
+
+        .divider { border-top: 1px solid #18181b; margin: 0.1rem 0; }
+
+        .progress-wrap { display: flex; flex-direction: column; gap: 0.5rem; }
+        .progress-header { display: flex; justify-content: space-between; font-size: 0.65rem; letter-spacing: 0.05em; text-transform: uppercase; }
+        .progress-label { color: #52525b; }
+        .progress-pct { color: #10b981; font-weight: 700; }
+
+        .progress-track {
+            width: 100%;
+            height: 3px;
+            background: #18181b;
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #059669, #10b981, #34d399);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+        }
+
+        .progress-track::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -60px;
+            width: 60px; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            animation: scan 2s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { left: -60px; }
+            100% { left: 100%; }
+        }
+
+        .log-output {
+            font-size: 0.65rem;
+            color: #3f3f46;
+            min-height: 1rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: color 0.2s;
+        }
+        .log-output.active  { color: #52525b; }
+        .log-output.success { color: #059669; }
+        .log-output.warn    { color: #f59e0b; }
+        .log-output.error   { color: #ef4444; }
+
+        .version-strip {
+            font-size: 0.6rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #27272a;
+            display: flex;
+            gap: 0.75rem;
+        }
+        .version-strip span { color: #3f3f46; }
+
+        .corner-tl, .corner-br {
+            position: fixed;
+            width: 40px; height: 40px;
+            border-color: #1f1f23;
+            border-style: solid;
+            opacity: 0.5;
+        }
+        .corner-tl { top: 12px; left: 12px; border-width: 1px 0 0 1px; }
+        .corner-br { bottom: 12px; right: 12px; border-width: 0 1px 1px 0; }
+    </style>
+</head>
+<body>
+    <div class="corner-tl"></div>
+    <div class="corner-br"></div>
+
+    <div class="container">
+        <div class="logo-block">
+            <div class="logo-icon">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+            </div>
+            <div class="logo-title">Loot-Game Hub</div>
+            <div class="logo-sub">by Coregenetic // System Initializing</div>
+        </div>
+
+        <div class="status-panel">
+            <div class="status-row">
+                <span class="status-label">Local Version</span>
+                <span class="status-value" id="localVersion">—</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Remote Version</span>
+                <span class="status-value" id="remoteVersion">Checking...</span>
+            </div>
+            <div class="status-row">
+                <span class="status-label">Status</span>
+                <span class="status-value amber" id="statusText">Connecting...</span>
+            </div>
+            <div class="divider"></div>
+            <div class="progress-wrap">
+                <div class="progress-header">
+                    <span class="progress-label" id="progressLabel">Initializing</span>
+                    <span class="progress-pct" id="progressPct">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+            <div class="log-output active" id="logLine">>_ Starting up...</div>
+        </div>
+
+        <div class="version-strip">
+            <span>Loot-Game Center</span>
+            <span>//</span>
+            <span id="footerVersion">v1.0.0</span>
+            <span>//</span>
+            <span>Coregenetic</span>
+        </div>
+    </div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        function setProgress(pct, label) {
+            document.getElementById('progressBar').style.width   = pct + '%';
+            document.getElementById('progressPct').textContent   = pct + '%';
+            document.getElementById('progressLabel').textContent = label;
+        }
+
+        function setLog(msg, type = 'active') {
+            const el = document.getElementById('logLine');
+            el.textContent = '>_ ' + msg;
+            el.className   = 'log-output ' + type;
+        }
+
+        function setStatus(msg, color = 'amber') {
+            const el = document.getElementById('statusText');
+            el.textContent = msg;
+            el.className   = 'status-value ' + color;
+        }
+
+        function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        async function init() {
+            // Get local version
+            const localVer = await ipcRenderer.invoke('get-local-version');
+            document.getElementById('localVersion').textContent  = 'v' + localVer;
+            document.getElementById('footerVersion').textContent = 'v' + localVer;
+            setProgress(15, 'Local version loaded');
+            setLog('Local version: v' + localVer);
+            await delay(300);
+
+            // Check for updates
+            setProgress(30, 'Checking for updates');
+            setLog('Connecting to GitHub...');
+
+            const result = await ipcRenderer.invoke('check-update');
+
+            if (result.error) {
+                setStatus('Offline — launching cached version', 'amber');
+                setLog('No connection: ' + result.error, 'warn');
+                document.getElementById('remoteVersion').textContent = 'Unreachable';
+            } else {
+                const remoteVer = 'v' + result.remoteVersion;
+                document.getElementById('remoteVersion').textContent = remoteVer;
+                document.getElementById('remoteVersion').className   = 'status-value green';
+                setProgress(60, 'Version check complete');
+
+                if (result.hasUpdate) {
+                    setStatus('Update available: ' + remoteVer, 'amber');
+                    setLog('New version available. Download via GitHub Releases.', 'warn');
+                    await delay(1500);
+                } else {
+                    setStatus('Up to date', 'green');
+                    setLog('Everything is up to date.', 'success');
+                }
+            }
+
+            setProgress(90, 'Launching app');
+            setLog('Starting Control Center...', 'success');
+            await delay(600);
+
+            setProgress(100, 'Ready');
+            await delay(300);
+
+            // Tell main process to open the main window
+            await ipcRenderer.invoke('launch-app');
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,64 @@
+{
+  "name": "loot-game-center",
+  "version": "1.0.0",
+  "description": "Loot-Game Control Center by Coregenetic",
+  "main": "main.js",
+  "author": "Coregenetic",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "build": {
+    "appId": "com.coregenetic.lootgame",
+    "productName": "LootGame",
+    "copyright": "Coregenetic",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "updater.js",
+      "version.json",
+      "splash.html",
+      "Control_Center.html",
+      "item_tool.html",
+      "loot_simulator.html",
+      "leaderboard.html",
+      "massage_manager.html",
+      "config_manager.html",
+      "assets/**"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      
+      
+      
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LootGame Center"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "Coregenetic",
+      "repo": "loot-game-center"
+    }
+  }
+}

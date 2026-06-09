@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & Release
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Read version
+        id: version
+        shell: pwsh
+        run: |
+          $data = Get-Content version.json -Raw | ConvertFrom-Json
+          echo "version=$($data.version)" >> $env:GITHUB_OUTPUT
+
+      - name: Build Electron app
+        run: npm run build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: List dist folder
+        shell: pwsh
+        run: Get-ChildItem dist -Recurse | Select-Object FullName, Length
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: "Loot-Game Center v${{ steps.version.outputs.version }}"
+          body: |
+            ## Loot-Game Center v${{ steps.version.outputs.version }}
+
+            ### Installation
+            1. **LootGame Setup.exe** runterladen
+            2. Installer ausführen
+            3. Desktop-Shortcut doppelklicken
+
+            ### Update
+            Neuen Installer runterladen und ausführen — fertig.
+
+            > by Coregenetic — authorized use by GunnyOne only
+          draft: false
+          prerelease: false
+          files: |
+            dist/*.exe
