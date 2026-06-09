@@ -399,6 +399,23 @@
                                 <button onclick="quickAdjustInput('slider_DoubleLootChance', 1, 0, 100)" class="tarkov-btn-small w-7 h-7 rounded-full shrink-0 hover:bg-amber-900/30 hover:text-amber-400 hover:border-amber-500/50">+</button>
                             </div>
                         </div>
+
+                        <!-- Kappa Doppel-Loot Bonus Slider -->
+                        <div class="pt-3 border-t border-zinc-800">
+                            <div class="flex justify-between items-end mb-2 relative group">
+                                <label class="block font-mono text-[11px] font-bold uppercase text-yellow-400 cursor-help">
+                                    🧳 Kappa Doppel-Loot Bonus
+                                    <span class="tooltip-icon">?</span>
+                                    <div class="tooltip-text">Zusätzlicher Doppel-Loot Bonus für Spieler die den Kappa Container besitzen. Wird zur normalen Doppel-Loot Chance addiert.</div>
+                                </label>
+                                <span id="lbl_KappaDoubleLootBonus" class="font-mono text-base text-yellow-400 font-black tracking-wider bg-[#050505] px-2 py-0.5 rounded border border-yellow-500/20">10%</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <button onclick="quickAdjustInput('slider_KappaDoubleLootBonus', -1, 0, 100)" class="tarkov-btn-small w-7 h-7 rounded-full shrink-0 hover:bg-yellow-900/30 hover:text-yellow-400 hover:border-yellow-500/50">-</button>
+                                <input type="range" id="slider_KappaDoubleLootBonus" min="0" max="100" value="10" class="tarkov-slider slider-amber m-0" oninput="updateSliders()">
+                                <button onclick="quickAdjustInput('slider_KappaDoubleLootBonus', 1, 0, 100)" class="tarkov-btn-small w-7 h-7 rounded-full shrink-0 hover:bg-yellow-900/30 hover:text-yellow-400 hover:border-yellow-500/50">+</button>
+                            </div>
+                        </div>
                         
                         <!-- Survival Slider -->
                         <div class="pt-3 border-t border-zinc-800">
@@ -686,6 +703,7 @@
                 "CooldownSeconds": 10,
                 "CooldownMessageDelaySeconds": 30,
                 "DoubleLootChance": 0.03,
+                "KappaDoubleLootBonus": 0.10,
                 "MinExfilSeconds": 5,
                 "MaxExfilSeconds": 10,
                 "SurvivalChance": 0.85
@@ -950,17 +968,26 @@
                 if(uiElements.xpMult) uiElements.xpMult.value = lvl.XPMultiplier ?? 1.5;
                 if(uiElements.xpMalus) uiElements.xpMalus.value = lvl.PrestigeXPMalus ?? 0.10; // NEU
                 
-                const dblChance = Math.round((gen.DoubleLootChance ?? 0.03) * 100);
-                const srvChance = Math.round((gen.SurvivalChance ?? 0.85) * 100);
+                const dblChance   = Math.round((gen.DoubleLootChance ?? 0.03) * 100);
+                const kappaBonus  = Math.round((gen.KappaDoubleLootBonus ?? 0.10) * 100);
+                const srvChance   = Math.round((gen.SurvivalChance ?? 0.85) * 100);
                 
-                const sliderDbl = document.getElementById('slider_DoubleLootChance');
-                const sliderSrv = document.getElementById('slider_SurvivalChance');
+                const sliderDbl   = document.getElementById('slider_DoubleLootChance');
+                const sliderKappa = document.getElementById('slider_KappaDoubleLootBonus');
+                const sliderSrv   = document.getElementById('slider_SurvivalChance');
                 
                 if (sliderDbl) {
                     sliderDbl.value = dblChance;
                     const lblDbl = document.getElementById('lbl_DoubleLootChance');
                     if(lblDbl) lblDbl.textContent = dblChance + "%";
                     updateSliderFill(sliderDbl, '#fbbf24'); 
+                }
+
+                if (sliderKappa) {
+                    sliderKappa.value = kappaBonus;
+                    const lblKappa = document.getElementById('lbl_KappaDoubleLootBonus');
+                    if(lblKappa) lblKappa.textContent = kappaBonus + "%";
+                    updateSliderFill(sliderKappa, '#eab308');
                 }
                 
                 if (sliderSrv) {
@@ -981,13 +1008,19 @@
         }
 
         function updateSliders() {
-            const sliderDbl = document.getElementById('slider_DoubleLootChance');
-            const sliderSrv = document.getElementById('slider_SurvivalChance');
+            const sliderDbl   = document.getElementById('slider_DoubleLootChance');
+            const sliderKappa = document.getElementById('slider_KappaDoubleLootBonus');
+            const sliderSrv   = document.getElementById('slider_SurvivalChance');
             
             if(sliderDbl) {
                 const lblDbl = document.getElementById('lbl_DoubleLootChance');
                 if(lblDbl) lblDbl.textContent = sliderDbl.value + "%";
                 updateSliderFill(sliderDbl, '#fbbf24');
+            }
+            if(sliderKappa) {
+                const lblKappa = document.getElementById('lbl_KappaDoubleLootBonus');
+                if(lblKappa) lblKappa.textContent = sliderKappa.value + "%";
+                updateSliderFill(sliderKappa, '#eab308');
             }
             if(sliderSrv) {
                 const lblSrv = document.getElementById('lbl_SurvivalChance');
@@ -1014,11 +1047,13 @@
             currentConfig.General.MinExfilSeconds = minEx;
             currentConfig.General.MaxExfilSeconds = maxEx;
             
-            const sDbl = document.getElementById('slider_DoubleLootChance');
-            const sSrv = document.getElementById('slider_SurvivalChance');
+            const sDbl   = document.getElementById('slider_DoubleLootChance');
+            const sKappa = document.getElementById('slider_KappaDoubleLootBonus');
+            const sSrv   = document.getElementById('slider_SurvivalChance');
             
-            if(sDbl) currentConfig.General.DoubleLootChance = parseFloat(sDbl.value) / 100;
-            if(sSrv) currentConfig.General.SurvivalChance = parseFloat(sSrv.value) / 100;
+            if(sDbl)   currentConfig.General.DoubleLootChance     = parseFloat(sDbl.value) / 100;
+            if(sKappa) currentConfig.General.KappaDoubleLootBonus = parseFloat(sKappa.value) / 100;
+            if(sSrv)   currentConfig.General.SurvivalChance       = parseFloat(sSrv.value) / 100;
 
             saveToLocalStorage();
         }
