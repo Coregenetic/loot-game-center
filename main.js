@@ -13,11 +13,13 @@ const SPLASH_HTML    = path.join(__dirname, 'splash.html');
 let splashWindow = null;
 let mainWindow   = null;
 
+const PRELOAD = path.join(__dirname, 'preload.js');
+
 // ─── Window: Splash ──────────────────────────────────────────────────────────
 function createSplash() {
   splashWindow = new BrowserWindow({
     width: 560,
-    height: 460,
+    height: 520,
     frame: false,
     transparent: false,
     resizable: false,
@@ -25,8 +27,9 @@ function createSplash() {
     skipTaskbar: false,
     backgroundColor: '#050505',
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      preload: PRELOAD,
+      contextIsolation: true,
+      nodeIntegration: false
     }
   });
 
@@ -47,8 +50,9 @@ function createMainWindow() {
     show: false,
     title: 'Loot-Game Center',
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
+      preload: PRELOAD,
+      contextIsolation: true,
+      nodeIntegration: false,
       webSecurity: false
     }
   });

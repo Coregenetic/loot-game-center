@@ -268,30 +268,25 @@
     </div>
 
     <script>
-        const { ipcRenderer } = require('electron');
-
         function setProgress(pct, label) {
             document.getElementById('progressBar').style.width   = pct + '%';
             document.getElementById('progressPct').textContent   = pct + '%';
             document.getElementById('progressLabel').textContent = label;
         }
-
         function setLog(msg, type = 'active') {
             const el = document.getElementById('logLine');
             el.textContent = '>_ ' + msg;
             el.className   = 'log-output ' + type;
         }
-
         function setStatus(msg, color = 'amber') {
             const el = document.getElementById('statusText');
             el.textContent = msg;
             el.className   = 'status-value ' + color;
         }
-
         function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
         async function downloadUpdate() {
-            await ipcRenderer.invoke('download-update');
+            if (window.electronAPI) window.electronAPI.downloadUpdate();
         }
 
         async function skipUpdate() {
@@ -300,16 +295,16 @@
             setLog('Update übersprungen.', 'warn');
             setProgress(100, 'Starte...');
             await delay(500);
-            await ipcRenderer.invoke('launch-app');
+            if (window.electronAPI) window.electronAPI.launchApp();
         }
 
         function closeWindow() {
-            try { ipcRenderer.send('window-close'); } catch(e) {}
+            if (window.electronAPI) window.electronAPI.close();
         }
 
         async function init() {
             // Get local version
-            const localVer = await ipcRenderer.invoke('get-local-version');
+            const localVer = window.electronAPI ? await window.electronAPI.getLocalVersion() : '—';
             document.getElementById('localVersion').textContent  = 'v' + localVer;
             document.getElementById('footerVersion').textContent = 'v' + localVer;
             setProgress(15, 'Local version loaded');
@@ -320,7 +315,7 @@
             setProgress(30, 'Checking for updates');
             setLog('Connecting to GitHub...');
 
-            const result = await ipcRenderer.invoke('check-update');
+            const result = window.electronAPI ? await window.electronAPI.checkUpdate() : { error: 'No API' };
 
             if (result.error) {
                 setStatus('Offline — launching cached version', 'amber');
@@ -336,9 +331,8 @@
                     setStatus('Update verfügbar: ' + remoteVer, 'amber');
                     setLog('Neue Version gefunden — bitte updaten.', 'warn');
                     setProgress(100, 'Update verfügbar');
-                    // Show update button, keep window open
                     document.getElementById('updateBtn').style.display = 'flex';
-                    return; // Stop here — don't launch app
+                    return;
                 } else {
                     setStatus('Aktuell', 'green');
                     setLog('Alles aktuell.', 'success');
@@ -348,12 +342,10 @@
             setProgress(90, 'Launching app');
             setLog('Starting Control Center...', 'success');
             await delay(600);
-
             setProgress(100, 'Ready');
             await delay(300);
 
-            // Tell main process to open the main window
-            await ipcRenderer.invoke('launch-app');
+            if (window.electronAPI) window.electronAPI.launchApp();
         }
 
         init();

@@ -515,13 +515,13 @@
 
         // ─── Electron Window Controls ─────────────────────────────────────
         function electronMinimize() {
-            try { require('electron').ipcRenderer.send('window-minimize'); } catch(e) {}
+            if (window.electronAPI) window.electronAPI.minimize();
         }
         function electronMaximize() {
-            try { require('electron').ipcRenderer.send('window-maximize'); } catch(e) {}
+            if (window.electronAPI) window.electronAPI.maximize();
         }
         function electronClose() {
-            try { require('electron').ipcRenderer.send('window-close'); } catch(e) {}
+            if (window.electronAPI) window.electronAPI.close();
         }
 
         window.onload = () => {
