@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
@@ -144,15 +144,25 @@ ipcMain.handle('launch-app', () => {
   createMainWindow();
 });
 
+ipcMain.handle('download-update', () => {
+  shell.openExternal(`https://github.com/Coregenetic/loot-game-center/releases/latest`);
+});
+
 ipcMain.handle('get-app-version', () => app.getVersion());
 
 // ─── Window controls (frameless) ─────────────────────────────────────────────
-ipcMain.on('window-minimize', () => mainWindow && mainWindow.minimize());
+ipcMain.on('window-minimize', () => {
+  const win = mainWindow || splashWindow;
+  if (win) win.minimize();
+});
 ipcMain.on('window-maximize', () => {
   if (!mainWindow) return;
   mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
 });
-ipcMain.on('window-close', () => mainWindow && mainWindow.close());
+ipcMain.on('window-close', () => {
+  const win = mainWindow || splashWindow;
+  if (win) win.close();
+});
 
 // ─── App lifecycle ────────────────────────────────────────────────────────────
 app.whenReady().then(() => {

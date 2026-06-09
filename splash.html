@@ -203,6 +203,13 @@
     <div class="corner-tl"></div>
     <div class="corner-br"></div>
 
+        <!-- Window Controls -->
+        <div style="position: fixed; top: 10px; right: 10px; display: flex; gap: 6px; -webkit-app-region: no-drag; z-index: 100;">
+            <button onclick="closeWindow()" style="width: 28px; height: 28px; border-radius: 4px; background: transparent; border: 1px solid #27272a; color: #52525b; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.color='#ef4444'; this.style.borderColor='rgba(239,68,68,0.4)'; this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.color='#52525b'; this.style.borderColor='#27272a'; this.style.background='transparent'">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/></svg>
+            </button>
+        </div>
+
     <div class="container">
         <div class="logo-block">
             <div class="logo-icon">
@@ -247,6 +254,17 @@
             <span>//</span>
             <span>Coregenetic</span>
         </div>
+
+        <!-- Update Button (hidden by default) -->
+        <div id="updateBtn" style="display: none; flex-direction: column; gap: 0.75rem; width: 100%;">
+            <button onclick="downloadUpdate()" style="width: 100%; padding: 0.85rem; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.5); border-radius: 6px; color: #f59e0b; font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 1rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; transition: all 0.2s; box-shadow: 0 0 15px rgba(245,158,11,0.1);" onmouseover="this.style.background='rgba(245,158,11,0.2)'; this.style.boxShadow='0 0 20px rgba(245,158,11,0.2)'" onmouseout="this.style.background='rgba(245,158,11,0.1)'; this.style.boxShadow='0 0 15px rgba(245,158,11,0.1)'">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                UPDATE HERUNTERLADEN
+            </button>
+            <button onclick="skipUpdate()" style="width: 100%; padding: 0.6rem; background: transparent; border: 1px solid #27272a; border-radius: 6px; color: #52525b; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.color='#a1a1aa'; this.style.borderColor='#3f3f46'" onmouseout="this.style.color='#52525b'; this.style.borderColor='#27272a'">
+                Überspringen & trotzdem starten
+            </button>
+        </div>
     </div>
 
     <script>
@@ -271,6 +289,23 @@
         }
 
         function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+        async function downloadUpdate() {
+            await ipcRenderer.invoke('download-update');
+        }
+
+        async function skipUpdate() {
+            document.getElementById('updateBtn').style.display = 'none';
+            setStatus('Starte ohne Update...', 'amber');
+            setLog('Update übersprungen.', 'warn');
+            setProgress(100, 'Starte...');
+            await delay(500);
+            await ipcRenderer.invoke('launch-app');
+        }
+
+        function closeWindow() {
+            try { ipcRenderer.send('window-close'); } catch(e) {}
+        }
 
         async function init() {
             // Get local version
@@ -298,12 +333,15 @@
                 setProgress(60, 'Version check complete');
 
                 if (result.hasUpdate) {
-                    setStatus('Update available: ' + remoteVer, 'amber');
-                    setLog('New version available. Download via GitHub Releases.', 'warn');
-                    await delay(1500);
+                    setStatus('Update verfügbar: ' + remoteVer, 'amber');
+                    setLog('Neue Version gefunden — bitte updaten.', 'warn');
+                    setProgress(100, 'Update verfügbar');
+                    // Show update button, keep window open
+                    document.getElementById('updateBtn').style.display = 'flex';
+                    return; // Stop here — don't launch app
                 } else {
-                    setStatus('Up to date', 'green');
-                    setLog('Everything is up to date.', 'success');
+                    setStatus('Aktuell', 'green');
+                    setLog('Alles aktuell.', 'success');
                 }
             }
 
